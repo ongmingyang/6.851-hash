@@ -5,19 +5,21 @@ class Hashy < Hash
   # Minimum load factor
   MIN_ENTRIES = 4
 
-  def __setup__(capacity=MIN_SIZE, max=MAX_ENTRIES, min=MIN_ENTRIES, size=0, size_deleted=0)
+  def __setup__(capacity=MIN_SIZE, max=MAX_ENTRIES, min=MIN_ENTRIES, size=0)
     @capacity = capacity
     @mask     = capacity - 1
     @max_entries = max
     @min_entries = min
     @size     = size
-    @size_deleted = size_deleted
     @entries  = Entries.new capacity
     @state    = State.new
   end
   private :__setup__
 
   class State
+    attr_accessor :head
+    attr_accessor :tail
+
     def self.from(state)
       new_state = new
       new_state.compare_by_identity if state and state.compare_by_identity?
@@ -26,6 +28,8 @@ class Hashy < Hash
 
     def initialize
       @compare_by_identity = false
+      @head = nil
+      @tail = nil
     end
 
     def compare_by_identity?
@@ -53,6 +57,8 @@ class Hashy < Hash
     attr_accessor :key
     attr_accessor :key_hash
     attr_accessor :value
+    attr_accessor :previous
+    attr_accessor :next
     attr_accessor :state
     attr_accessor :deleted
 
@@ -62,12 +68,36 @@ class Hashy < Hash
       @value    = value
       @state    = state
       @deleted  = false
+
+      if tail = state.tail
+        @previous = tail
+        state.tail = tail.next = self
+      else
+        state.head = state.tail = self
+      end
     end
 
     def delete(key, key_hash)
-      if @state.match? @key, @key_hash, key, key_hash
-        @size_deleted += 1
+      if !@deleted and @state.match? @key, @key_hash, key, key_hash
         @deleted = true
+        remove
+        return true
+      else
+        false
+      end
+    end
+
+    def remove
+      if @previous
+        @previous.next = @next
+      else
+        @state.head = @next
+      end
+
+      if @next
+        @next.previous = @previous
+      else
+        @state.tail = @previous
       end
     end
   end
@@ -95,15 +125,15 @@ class Hashy < Hash
 
       index = (1 + index) % @capacity
       item = @entries[index]
-
     end
+
+    nil
   end
 
   def []=(key, value)
     Rubinius.check_frozen
 
-    size_filled = @size - @size_deleted
-    if @size > @max_entries or (size_filled < @min_entries and size_filled > MIN_ENTRIES)
+    if @size > @max_entries or (@size < @min_entries and @size > MIN_ENTRIES)
       redistribute @entries
     end
 
@@ -112,8 +142,13 @@ class Hashy < Hash
     item = @entries[index]
 
     while item
+      if item.deleted
+        item.key = key
+        item.key_hash = key_hash
+        return item.value = value
+      end
+
       if @state.match? item.key, item.key_hash, key, key_hash
-        item.deleted = false if item.deleted
         return item.value = value
       end
 
@@ -128,15 +163,27 @@ class Hashy < Hash
   end
   alias_method :store, :[]=
 
+  def delete(key)
+    Rubinius.check_frozen
+    key_hash = key.hash
+    index = key_index key_hash
+
+    if item = @entries[index]
+      if item.delete key, key_hash
+        @size -= 1
+        return item.value
+      end
+    end
+
+    return yield(key) if block_given?
+  end
+
   # Adjusts the hash storage and redistributes the entries among
   # the new bins. Any Iterator instance will be invalid after a
   # call to #redistribute. Does not recalculate the cached key_hash
   # values. See +#rehash+.
   def redistribute(entries)
     capacity = @capacity
-    size_filled = @size - @size_deleted
-    @size_deleted = 0
-    @size = size_filled
 
     # Rather than using __setup__, initialize the specific values we need to
     # change so we don't eg overwrite @state.
@@ -144,7 +191,7 @@ class Hashy < Hash
       @capacity    = capacity * 2
       @max_entries = @max_entries * 2
       @min_entries = @min_entries * 2
-    elsif size_filled < @min_entries and size_filled > MIN_ENTRIES
+    elsif @size < @min_entries and @size > MIN_ENTRIES
       @capacity    = capacity / 2
       @max_entries = @max_entries / 2
       @min_entries = @min_entries / 2
