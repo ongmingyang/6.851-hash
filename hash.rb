@@ -1,7 +1,13 @@
 # This class works with rbx-2.2.6
 
 class Hashy < Hash
+  include Enumerable
+  Entries = Rubinius::Tuple
 
+  # Initial size of Hash. MUST be a power of 2.
+  MIN_SIZE = 16
+  # Maximum load factor
+  MAX_ENTRIES = 12
   # Minimum load factor
   MIN_ENTRIES = 4
 
@@ -83,7 +89,7 @@ class Hashy < Hash
         remove
         return true
       else
-        false
+        return false
       end
     end
 
@@ -101,6 +107,20 @@ class Hashy < Hash
       end
     end
   end
+
+  def key?(key)
+    find_item(key) != nil
+  end
+
+  alias_method :has_key?, :key?
+  alias_method :include?, :key?
+  alias_method :member?, :key?
+
+  # Calculates the +@entries+ slot given a key_hash value.
+  def key_index(key_hash)
+    key_hash & @mask
+  end
+  private :key_index
 
   def new_bucket(key, key_hash, value)
     if key.kind_of?(String) and !key.frozen?
@@ -126,8 +146,6 @@ class Hashy < Hash
       index = (1 + index) % @capacity
       item = @entries[index]
     end
-
-    nil
   end
 
   def []=(key, value)
@@ -138,13 +156,15 @@ class Hashy < Hash
     end
 
     key_hash = key.hash
-    index = key_index key_hash # key_hash & @mask
+    index = key_index key_hash
     item = @entries[index]
 
     while item
       if item.deleted
         item.key = key
         item.key_hash = key_hash
+        item.deleted = false
+        @size += 1
         return item.value = value
       end
 
@@ -164,11 +184,8 @@ class Hashy < Hash
   alias_method :store, :[]=
 
   def delete(key)
-    Rubinius.check_frozen
     key_hash = key.hash
-    index = key_index key_hash
-
-    if item = @entries[index]
+    if item = find_item(key)
       if item.delete key, key_hash
         @size -= 1
         return item.value
@@ -187,24 +204,17 @@ class Hashy < Hash
 
     # Rather than using __setup__, initialize the specific values we need to
     # change so we don't eg overwrite @state.
-    if @size > @max_entries
-      @capacity    = capacity * 2
-      @max_entries = @max_entries * 2
-      @min_entries = @min_entries * 2
-    elsif @size < @min_entries and @size > MIN_ENTRIES
-      @capacity    = capacity / 2
-      @max_entries = @max_entries / 2
-      @min_entries = @min_entries / 2
-    end
+    @size > @max_entries ? factor = 2 : factor = 1 / 2
+    @capacity    = capacity * factor
+    @max_entries = @max_entries * factor
+    @min_entries = @min_entries * factor
     @entries     = Entries.new @capacity
     @mask        = @capacity - 1
 
     i = -1
     while (i += 1) < capacity
-      item = entries[i]
-      unless item.nil?
+      if item = entries[i]
         next if item.deleted
-
         index = key_index item.key_hash
         index = (1 + index) % @capacity while @entries[index] 
         @entries[index] = item

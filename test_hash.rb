@@ -2,35 +2,69 @@ require_relative "hash.rb"
 require 'minitest/autorun'
  
 class TestHash < MiniTest::Unit::TestCase
- 
+
   describe 'Hashy' do
     before do
-      @old_hash = Hash.new
-      @new_hash = Hashy.new
+      @hash = Hashy.new
       @n = 1000
       @list = []
-    end
 
-    it 'adds 1000 unique items to hash' do
-      for i in 1..@n
-        string = rand(@n).to_s(36) until !@old_hash.has_key? string
-        @old_hash[string] = i
+      # Inserts into hash a unique string of size n 
+      def insert(i, n)
+        begin
+          string = rand(n).to_s(36)
+        end while @hash.has_key? string
+        @hash[string] = i
         @list[i] = string
       end
-      for i in 1..@n
-        assert_equal @old_hash[@list[i]], i
+
+      # Deletes a random item from n items
+      # This random item must exist in the table
+      def delete(n, i=0)
+        i = rand(n) while @list[i].nil?
+        @hash.delete(@list[i])
+        @list[i] = nil
       end
     end
 
-    it 'adds 1000 unique items to hashy' do
+    it 'adds unique items to hashy' do
       for i in 1..@n
-        string = rand(@n).to_s(36) until !@new_hash.has_key? string
-        @new_hash[string] = i
-        @list[i] = string
+        insert(i, @n)
       end
       for i in 1..@n
-        assert_equal @new_hash[@list[i]], i
+        assert_equal i, @hash[@list[i]], "Asserts key value pairs are matched correctly"
       end
+      assert_equal @n, @hash.size, "Asserts size matches after insertions"
+    end
+
+    it 'adds and deletes unique items to hashy' do
+      mid = @n / 2
+      for i in 1..mid
+        insert(i, @n)
+      end
+
+      inserted = deleted = 0
+      for i in mid+1..@n
+        if rand(2) == 1
+          insert(i, @n)
+          inserted += 1
+        else
+          delete(mid)
+          deleted += 1
+        end
+      end
+
+      for i in 1..@list.length
+        key = @list[i]
+        if key.nil?
+          assert_nil @hash[key], "Asserts items are deleted"
+        else
+          assert_equal i, @hash[key], "Asserts inserted items remain"
+        end
+      end
+      
+      size = mid + inserted - deleted
+      assert_equal size, @hash.size, "Assert size matches after deletions"
     end
   end
 end
