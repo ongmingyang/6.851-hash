@@ -204,10 +204,16 @@ class Hashy < Hash
 
     # Rather than using __setup__, initialize the specific values we need to
     # change so we don't eg overwrite @state.
-    @size > @max_entries ? factor = 2 : factor = 1 / 2
-    @capacity    = capacity * factor
-    @max_entries = @max_entries * factor
-    @min_entries = @min_entries * factor
+    if @size > @max_entries
+      @capacity    = capacity * 2
+      @max_entries = @max_entries * 2
+      @min_entries = @min_entries * 2
+    else
+      @capacity    = capacity / 2
+      @max_entries = @max_entries / 2
+      @min_entries = @min_entries / 2
+    end
+
     @entries     = Entries.new @capacity
     @mask        = @capacity - 1
 

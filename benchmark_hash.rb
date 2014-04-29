@@ -26,19 +26,28 @@ def delete_from_hash(hash, n, keys)
 end
 
 n = 10000
-Benchmark.bm do |x|
-  $old_hash = Hash.new
+# The times for some benchmarks depend on the order in which items are run. 
+# These differences are due to the cost of memory allocation and garbage collection. 
+# To avoid these discrepancies, the bmbm method is provided. 
+Benchmark.bmbm do |x|
   $new_hash = Hashy.new
+  $old_hash = Hash.new
+  $new_keys = put_into_hash($new_hash, n)
+  $old_keys = put_into_hash($old_hash, n)
 
-  puts ">> Inserting #{n} elements into Hash and Hashy"
-  x.report { $old_keys = put_into_hash($old_hash, n) }
-  x.report { $new_keys = put_into_hash($new_hash, n) }
+  puts ">> Inserting #{n} elements into Hashy and Hash"
+  x.report("new") { put_into_hash($new_hash, n) }
+  x.report("old") { put_into_hash($old_hash, n) }
 
-  puts ">> Accessing #{n} elements in Hash and Hashy"
-  x.report { lookup_hash($old_hash, $old_keys) }
-  x.report { lookup_hash($new_hash, $new_keys) }
+  puts ">> Accessing #{n} elements in Hashy and Hash"
+  x.report("new") { lookup_hash($new_hash, $new_keys) }
+  x.report("old") { lookup_hash($old_hash, $old_keys) }
 
-  puts ">> Deleting #{n/2} elements from Hash and Hashy"
-  x.report { delete_from_hash($old_hash, n/2, $old_keys) }
-  x.report { delete_from_hash($new_hash, n/2, $new_keys) }
+  puts ">> Deleting #{n} random elements from Hashy and Hash"
+  x.report("new") { delete_from_hash($new_hash, n, $new_keys) }
+  x.report("old") { delete_from_hash($old_hash, n, $old_keys) }
+
+  puts ">> Deleting and inserting random elements from Hashy and Hash"
+  x.report("new") { delete_from_hash($new_hash, n, $new_keys); put_into_hash($new_hash, n) }
+  x.report("old") { delete_from_hash($old_hash, n, $old_keys); put_into_hash($old_hash, n) }
 end
