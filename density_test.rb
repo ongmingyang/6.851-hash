@@ -20,21 +20,30 @@ def write_output(filename, h)
 
   max_length = 0
   current_max_length = 0
-  c_n = 0
+  current_max_probes = 0
+  c_n = 0 # number of chains
+  p_n = 0 # number of probe rounds
   average_length = Float 0
+  average_probes = Float 0
 
   h.entries.each do |slot|
     if slot.nil?
       f.syswrite "0"
-      if current_max_length >= max_length
-        max_length = current_max_length
+      unless current_max_length == 0
+        if current_max_length >= max_length
+          max_length = current_max_length
+        end
+        average_length = ( average_length * c_n + current_max_length ) / ( c_n + 1 )
+        current_max_length = 0
+        c_n += 1
       end
-      average_length = ( average_length * c_n + current_max_length ) / ( c_n + 1 )
-      current_max_length = 0
-      c_n += 1
+      average_probes = ( average_probes * p_n + current_max_probes ) / ( p_n + 1 )
+      current_max_probes = 0
+      p_n += 1
     else
       f.syswrite "1"
       current_max_length += 1
+      current_max_probes += 1
     end
   end
 
@@ -42,9 +51,11 @@ def write_output(filename, h)
     max_length = current_max_length
   end
 
-  f.syswrite "\n"
+  puts max_length, average_length, average_probes
+
+  f.syswrite "\nMax length    : "
   f.syswrite max_length
-  f.syswrite "\n"
+  f.syswrite "\nAverage length: "
   f.syswrite average_length
   f.syswrite "\n"
   
