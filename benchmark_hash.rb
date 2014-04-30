@@ -25,6 +25,12 @@ def delete_from_hash(hash, n, keys)
   end   
 end
 
+def put_in_order(hash, n)
+  for i in 1..n
+    hash[i] = i
+  end
+end
+
 n = 10000
 # The times for some benchmarks depend on the order in which items are run. 
 # These differences are due to the cost of memory allocation and garbage collection. 
@@ -34,10 +40,13 @@ Benchmark.bmbm do |x|
   $old_hash = Hash.new
   $new_keys = put_into_hash($new_hash, n)
   $old_keys = put_into_hash($old_hash, n)
+  # Hash now has 10000 objects
 
   puts ">> Inserting #{n} elements into Hashy and Hash"
   x.report("new") { put_into_hash($new_hash, n) }
   x.report("old") { put_into_hash($old_hash, n) }
+
+  # Hash now has 20000 objects
 
   puts ">> Accessing #{n} elements in Hashy and Hash"
   x.report("new") { lookup_hash($new_hash, $new_keys) }
@@ -47,7 +56,13 @@ Benchmark.bmbm do |x|
   x.report("new") { delete_from_hash($new_hash, n, $new_keys) }
   x.report("old") { delete_from_hash($old_hash, n, $old_keys) }
 
+  # Hash now has >10000 objects
+
   puts ">> Deleting and inserting random elements from Hashy and Hash"
   x.report("new") { delete_from_hash($new_hash, n, $new_keys); put_into_hash($new_hash, n) }
   x.report("old") { delete_from_hash($old_hash, n, $old_keys); put_into_hash($old_hash, n) }
+
+  puts ">> Inserting #{n} elements in order into empty Hashy and Hash"
+  x.report("new") { put_in_order(Hashy.new, n) }
+  x.report("old") { put_in_order(Hash.new, n) }
 end

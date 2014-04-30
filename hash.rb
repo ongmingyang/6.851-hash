@@ -11,6 +11,9 @@ class Hashy < Hash
   # Minimum load factor
   MIN_ENTRIES = 4
 
+  # This allows us to see the internal structure of the table
+  attr_reader :entries
+
   def __setup__(capacity=MIN_SIZE, max=MAX_ENTRIES, min=MIN_ENTRIES, size=0)
     @capacity = capacity
     @mask     = capacity - 1
@@ -117,6 +120,7 @@ class Hashy < Hash
   alias_method :member?, :key?
 
   # Calculates the +@entries+ slot given a key_hash value.
+  # TODO do simple tabulation hashing instead
   def key_index(key_hash)
     key_hash & @mask
   end
