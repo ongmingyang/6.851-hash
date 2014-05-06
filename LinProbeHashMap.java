@@ -284,6 +284,7 @@ implements Map<K,V>, Cloneable, Serializable{
 	            e.recordAccess(this);
 	            return oldValue;
 	        }
+	        System.out.println("collide"+key.toString()+e.key.toString());
 	        i = (i + 1) % table.length;
 	    }
 	    modCount++;
@@ -537,7 +538,7 @@ implements Map<K,V>, Cloneable, Serializable{
 
         Entry[] tab = table;
         for (int i = 0; i < tab.length ; i++)
-        	if (value.equals(tab[i].value) && !tab[i].removed)
+        	if (tab[i] != null && value.equals(tab[i].value) && !tab[i].removed)
                 return true;
         return false;
     }
