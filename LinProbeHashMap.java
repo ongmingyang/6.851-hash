@@ -270,7 +270,6 @@ implements Map<K,V>, Cloneable, Serializable{
 	 *         (A <tt>null</tt> return can also indicate that the map
 	 *         previously associated <tt>null</tt> with <tt>key</tt>.)
 	 */
-	//TODO: change this to linear probing
 	public V put(K key, V value) {
 	    if (key == null)
 	        return putForNullKey(value);

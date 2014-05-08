@@ -14,4 +14,11 @@ public class LinProbeSimpleTabHashMapTest {
 		assertEquals(Integer.parseInt("10101010",2), (i1 & (255<<16))>>16);
 		assertEquals(Integer.parseInt("101011",2), (i1 & (255<<24))>>24);
 	}
+	
+	@Test
+	public void lookupTableLoaderWorks(){
+		LookupTableLoader l = new LookupTableLoader();
+		int[][]tables = l.getTables();
+		assertEquals(Integer.toBinaryString(tables[0][0]), "11010111000010110100011001101100");
+	}
 }
