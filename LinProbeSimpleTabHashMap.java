@@ -166,10 +166,10 @@ public class LinProbeSimpleTabHashMap<K,V> extends AbstractMap<K,V>
      */
     //TODO: Implement Simple Tabulation Hash here
     int hash(int h) {
-    	byte h1 = (byte) (h & 255);
-    	byte h2 = (byte) ((h & (255 << 8))>>8);
-    	byte h3 = (byte) ((h & (255 << 16))>>16);
-    	byte h4 = (byte) ((h & (255 << 24))>>24);
+    	int h1 = h & 255;
+    	int h2 = (h & (255 << 8))>>8;
+    	int h3 = (h & (255 << 16))>>16;
+    	int h4 = (h & (255 << 24))>>24;
     	return simpleTable1[h1]^simpleTable2[h2]
     			^simpleTable3[h3]^simpleTable4[h4] ;
     }
