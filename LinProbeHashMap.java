@@ -283,7 +283,7 @@ implements Map<K,V>, Cloneable, Serializable{
 	            e.recordAccess(this);
 	            return oldValue;
 	        }
-	        System.out.println("collide"+key.toString()+e.key.toString());
+	        //System.out.println("collide"+key.toString()+e.key.toString());
 	        i = (i + 1) % table.length;
 	    }
 	    modCount++;

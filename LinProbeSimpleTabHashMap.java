@@ -164,12 +164,12 @@ public class LinProbeSimpleTabHashMap<K,V> extends AbstractMap<K,V>
      * Hashes the int prehash of each object 
      * according to simple tabulation hash
      */
-    //TODO: Implement Simple Tabulation Hash here
     int hash(int h) {
     	int h1 = h & 255;
     	int h2 = (h & (255 << 8))>>8;
     	int h3 = (h & (255 << 16))>>16;
-    	int h4 = (h & (255 << 24))>>24;
+    	int h4 = (h>=0 ? (h & (255 << 24))>>24 : 
+    		256 + ((h & (255 << 24))>>24));   	
     	return simpleTable1[h1]^simpleTable2[h2]
     			^simpleTable3[h3]^simpleTable4[h4] ;
     }
@@ -288,7 +288,7 @@ public class LinProbeSimpleTabHashMap<K,V> extends AbstractMap<K,V>
 	            e.recordAccess(this);
 	            return oldValue;
 	        }
-	        System.out.println("collide"+key.toString()+e.key.toString());
+	        //System.out.println("collide"+key.toString()+e.key.toString());
 	        i = (i + 1) % table.length;
 	    }
 	    modCount++;
