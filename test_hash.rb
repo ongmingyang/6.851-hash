@@ -1,11 +1,13 @@
 require_relative "hash.rb"
+require_relative "simple_tabulation.rb"
 require 'minitest/autorun'
  
 class TestHash < MiniTest::Unit::TestCase
 
   describe 'Hashy' do
     before do
-      @hash = Hashy.new
+      #@hash = Hashy.new
+      @hash = Hashyst.new # toggle commenting this line to test hashy/hashyst
       @n = 1000
       @list = []
 

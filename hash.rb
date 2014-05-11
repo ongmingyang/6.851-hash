@@ -120,7 +120,6 @@ class Hashy < Hash
   alias_method :member?, :key?
 
   # Calculates the +@entries+ slot given a key_hash value.
-  # TODO do simple tabulation hashing instead
   def key_index(key_hash)
     key_hash & @mask
   end

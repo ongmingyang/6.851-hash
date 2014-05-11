@@ -1,4 +1,51 @@
-require_relative "hash.rb"
+require_relative "simple_tabulation.rb"
+
+$avg_probes = Float 0
+$p_n = 0
+
+class Hashyp < Hashy
+  def find_item(key)
+    key_hash = key.hash
+    index = key_index key_hash
+    item = @entries[index]
+
+    current_max_length = 0
+    while item
+      current_max_length += 1
+      if !item.deleted and @state.match? item.key, item.key_hash, key, key_hash
+        $avg_probes = ( $avg_probes * $p_n + current_max_length ) / ( $p_n + 1 )
+        current_max_length = 0
+        $p_n += 1
+        return item
+      end
+
+      index = (1 + index) % @capacity
+      item = @entries[index]
+    end
+  end
+end
+
+class Hashystp < Hashyst
+  def find_item(key)
+    key_hash = key.hash
+    index = key_index key_hash
+    item = @entries[index]
+
+    current_max_length = 0
+    while item
+      current_max_length += 1
+      if !item.deleted and @state.match? item.key, item.key_hash, key, key_hash
+        $avg_probes = ( $avg_probes * $p_n + current_max_length ) / ( $p_n + 1 )
+        current_max_length = 0
+        $p_n += 1
+        return item
+      end
+
+      index = (1 + index) % @capacity
+      item = @entries[index]
+    end
+  end
+end
 
 def put_into_hash(hash, n)
   for i in 1..n
@@ -15,16 +62,22 @@ def put_in_order(hash, n)
   end
 end
 
+def access(hash)
+  $avg_probes = Float 0
+  $p_n = 0
+  for i in hash.keys
+    hash[i]
+  end
+  return $avg_probes
+end
+
 def write_output(filename, h)
   f = File.open filename, "w"
 
   max_length = 0
   current_max_length = 0
-  current_max_probes = 0
   c_n = 0 # number of chains
-  p_n = 0 # number of probe rounds
   average_length = Float 0
-  average_probes = Float 0
 
   h.entries.each do |slot|
     if slot.nil?
@@ -37,13 +90,9 @@ def write_output(filename, h)
         current_max_length = 0
         c_n += 1
       end
-      average_probes = ( average_probes * p_n + current_max_probes ) / ( p_n + 1 )
-      current_max_probes = 0
-      p_n += 1
     else
       f.syswrite "1"
       current_max_length += 1
-      current_max_probes += 1
     end
   end
 
@@ -51,22 +100,38 @@ def write_output(filename, h)
     max_length = current_max_length
   end
 
-  puts max_length, average_length, average_probes
+  print "Max length: ", max_length, "\nAverage length: ", average_length, "\n"
 
-  f.syswrite "\nMax length    : "
-  f.syswrite max_length
-  f.syswrite "\nAverage length: "
-  f.syswrite average_length
-  f.syswrite "\n"
+  #f.syswrite "\nMax length    : "
+  #f.syswrite max_length
+  #f.syswrite "\nAverage length: "
+  #f.syswrite average_length
+  #f.syswrite "\n"
   
 end
 
-hash = Hashy.new
-hash2 = Hashy.new
-n = 10000
+hash = Hashyp.new
+hashyst = Hashystp.new
+hash2 = Hashyp.new
+hashyst2 = Hashystp.new
+n = 196610 #196608
 
+print "\nTesting Hashy (unordered):\n"
 put_into_hash hash, n
 write_output "output_unordered.txt", hash
+print "Average Probes: ", access(hash), "\n"
 
+print "\nTesting Hashy (unordered) with simple tabulation hashing:\n"
+put_into_hash hashyst, n
+write_output "output_unordered.txt", hashyst
+print "Average Probes: ", access(hashyst), "\n"
+
+print "\nTesting Hashy (ordered):\n"
 put_in_order hash2, n
 write_output "output_ordered.txt", hash2
+print "Average Probes: ", access(hash2), "\n"
+
+print "\nTesting Hashy (ordered) with simple tabulation hashing:\n"
+put_in_order hashyst2, n
+write_output "output_ordered.txt", hashyst2
+print "Average Probes: ", access(hashyst2), "\n"
