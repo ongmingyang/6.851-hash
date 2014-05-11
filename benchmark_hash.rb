@@ -31,7 +31,7 @@ def put_in_order(hash, n)
   end
 end
 
-n = 10000
+n = 1000000
 # The times for some benchmarks depend on the order in which items are run. 
 # These differences are due to the cost of memory allocation and garbage collection. 
 # To avoid these discrepancies, the bmbm method is provided. 
