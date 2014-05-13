@@ -114,24 +114,25 @@ hash = Hashyp.new
 hashyst = Hashystp.new
 hash2 = Hashyp.new
 hashyst2 = Hashystp.new
-n = 196610 #196608
-
-print "\nTesting Hashy (unordered):\n"
-put_into_hash hash, n
-write_output "output_unordered.txt", hash
-print "Average Probes: ", access(hash), "\n"
-
-print "\nTesting Hashy (unordered) with simple tabulation hashing:\n"
-put_into_hash hashyst, n
-write_output "output_unordered.txt", hashyst
-print "Average Probes: ", access(hashyst), "\n"
+n = 49152 #98305 #196610
+n = n+1 # offset for zero index
 
 print "\nTesting Hashy (ordered):\n"
-put_in_order hash2, n
-write_output "output_ordered.txt", hash2
+put_in_order hash, n
+write_output "output_ordered.txt", hash
+print "Average Probes: ", access(hash), "\n"
+
+print "\nTesting Hashy (unordered):\n"
+put_into_hash hash2, n
+write_output "output_unordered.txt", hash2
 print "Average Probes: ", access(hash2), "\n"
 
 print "\nTesting Hashy (ordered) with simple tabulation hashing:\n"
-put_in_order hashyst2, n
-write_output "output_ordered.txt", hashyst2
+put_in_order hashyst, n
+write_output "output_ordered.txt", hashyst
+print "Average Probes: ", access(hashyst), "\n"
+
+print "\nTesting Hashy (unordered) with simple tabulation hashing:\n"
+put_into_hash hashyst2, n
+write_output "output_unordered.txt", hashyst2
 print "Average Probes: ", access(hashyst2), "\n"
